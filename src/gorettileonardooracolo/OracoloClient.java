@@ -5,6 +5,7 @@
 package gorettileonardooracolo;
 
 import java.net.Socket;
+import java.io.IOException;
 
 /**
  *
@@ -13,8 +14,12 @@ import java.net.Socket;
 public class OracoloClient {
        public static void main(String[] args) throws Exception {
         // Facoltativo: indirizzo del server come argomento (default: localhost)
-        String host = args.length > 0 ? args[0] : "localhost";
-        Socket socket = new Socket(host, GorettiLeonardoOracolo.PORTA);
-        System.out.println("Connesso a " + host + ":" + GorettiLeonardoOracolo.PORTA);
-        GorettiLeonardoOracolo.avvia(socket); 
-}
+                String host = args.length > 0 ? args[0] : "localhost";
+                System.out.println("OracoloClient: connessione a " + host + ":" + GorettiLeonardoOracolo.PORTA);
+                // Apriamo il socket e avviamo la sessione interattiva
+                try (Socket socket = new Socket(host, GorettiLeonardoOracolo.PORTA)) {
+                        GorettiLeonardoOracolo.avvia(socket);
+                } catch (IOException ex) {
+                        System.err.println("Impossibile connettersi al server: " + ex.getMessage());
+                }
+        }
