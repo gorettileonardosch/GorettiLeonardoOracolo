@@ -26,49 +26,36 @@ public class GorettiLeonardoOracolo {
     // e poi chiude la connessione locale (ovvero: "se l'utente digita la frase poi esce").
     public static final String EXIT_PHRASE = "grazie per la convocazione grande mago";
 
-    // Metodo di utilità usato dal client per avviare una sessione interattiva
-    // Riceve un Socket già connesso al server e gestisce due thread:
-    // - uno che stampa le risposte arrivate dal server
-    // - uno che legge dalla tastiera e invia al server
+    // Metodo di utilità semplice: per ogni riga letta dalla tastiera invia al server
+    // e poi legge una risposta e la stampa. Se l'utente digita EXIT_PHRASE, il
+    // client invia la riga e poi esce ("se l'utente digita la frase poi esce").
     public static void avvia(Socket socket) throws IOException {
         BufferedReader dalSocket = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        PrintWriter versoSocket = new PrintWriter(socket.getOutputStream(), true); // true = autoflush con println
+        PrintWriter versoSocket = new PrintWriter(socket.getOutputStream(), true);
         BufferedReader tastiera = new BufferedReader(new InputStreamReader(System.in));
 
-        // Thread che legge dal server e stampa sulla console
-        Thread reader = new Thread(() -> {
-            try {
-                String linea;
-                while ((linea = dalSocket.readLine()) != null) {
-                    System.out.println("[SERVER] " + linea);
-                }
-            } catch (IOException ex) {
-                System.out.println("Connessione chiusa dal server.");
-            }
-        });
-        reader.setDaemon(true);
-        reader.start();
+        System.out.println("HELP per i comandi. Per uscire digita: " + EXIT_PHRASE);
 
-        // Loop principale: leggere dalla tastiera e inviare al server
-        // Istruzioni semplici per l'utente:
-        // - Digita "HELP" per vedere i comandi disponibili
-        // - Per terminare la sessione digita esattamente la frase:
-        //   "grazie per la convocazione grande mago" (il client la invia e poi esce)
-        System.out.println("Digitare comandi (HELP per aiuto).");
-        System.out.println("Per uscire digita: " + EXIT_PHRASE);
         String input;
         while ((input = tastiera.readLine()) != null) {
-            if (input.trim().isEmpty()) continue;
-            // Se l'utente digita la frase magica, inviamo l'ultima riga e usciamo
-            // (nota per l'utente: "se l'utente digita la frase poi esce").
+            input = input.trim();
+            if (input.isEmpty()) continue;
+            // invia e aspetta una risposta (semplice, bloccante)
             versoSocket.println(input);
+            // Se abbiamo inviato la frase di uscita, terminiamo subito dopo l'invio
             if (input.equalsIgnoreCase(EXIT_PHRASE)) {
-                System.out.println("Frase di uscita rilevata, chiudo connessione...");
+                System.out.println("Frase di uscita inviata, chiudo.");
                 break;
             }
+            // leggiamo una singola linea di risposta dal server e la mostriamo
+            String risposta = dalSocket.readLine();
+            if (risposta == null) {
+                System.out.println("Server ha chiuso la connessione.");
+                break;
+            }
+            System.out.println("SERVER: " + risposta);
         }
 
-        // chiudere socket alla fine
         socket.close();
         System.out.println("Client terminato.");
     }
