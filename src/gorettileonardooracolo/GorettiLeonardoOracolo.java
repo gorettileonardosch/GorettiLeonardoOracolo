@@ -35,6 +35,11 @@ public class GorettiLeonardoOracolo {
         BufferedReader tastiera = new BufferedReader(new InputStreamReader(System.in));
 
         System.out.println("HELP per i comandi. Per uscire digita: " + EXIT_PHRASE);
+        // Il server manda il benvenuto appena ci colleghiamo, quindi lo leggiamo subito.
+        String benvenuto = dalSocket.readLine();
+        if (benvenuto != null) {
+            System.out.println("SERVER: " + benvenuto);
+        }
 
         String input;
         while ((input = tastiera.readLine()) != null) {
@@ -44,6 +49,10 @@ public class GorettiLeonardoOracolo {
             versoSocket.println(input);
             // Se abbiamo inviato la frase di uscita, terminiamo subito dopo l'invio
             if (input.equalsIgnoreCase(EXIT_PHRASE)) {
+                String saluto = dalSocket.readLine();
+                if (saluto != null) {
+                    System.out.println("SERVER: " + saluto);
+                }
                 System.out.println("Frase di uscita inviata, chiudo.");
                 break;
             }
