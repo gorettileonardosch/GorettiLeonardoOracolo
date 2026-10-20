@@ -27,6 +27,27 @@ public class OracoloServer {
 		"Segni indicano che è probabile."
 	};
 
+	// Frasi che userà la personalità Oracolo per predire il futuro.
+	private static final String[] FRASI_ORACOLO = {
+		"Vedo un cambiamento importante nel tuo futuro.",
+		"Una nuova opportunità si presenterà presto.",
+		"Il tuo cammino sarà chiaro se saprai avere pazienza."
+	};
+
+	// Frasi che userà la personalità Chiromante parlando di tarocchi.
+	private static final String[] FRASI_CHIROMANTE = {
+		"Le carte mostrano il Sole: ti aspettano giorni luminosi.",
+		"La Ruota della Fortuna annuncia un cambiamento.",
+		"L'Eremita ti consiglia di fermarti e ascoltare te stesso."
+	};
+
+	// Il Mago risponde in modo teatrale, con un piccolo effetto magico.
+	private static final String[] FRASI_MAGO = {
+		"Una scintilla illumina la risposta: sì, osa! ✨",
+		"Le rune girano nell'aria... la risposta è forse!",
+		"Puff! Dal fumo appare un indizio: riprova domani."
+	};
+
 	// Frase speciale che, se inviata dal client, chiude la sessione per quel client
 	// Se il client invia questa frase, il server risponde e chiude la connessione per quel client.
 	private static final String EXIT_PHRASE = "grazie per la convocazione grande mago";
