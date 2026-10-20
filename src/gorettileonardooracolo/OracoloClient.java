@@ -22,3 +22,4 @@ public class OracoloClient {
                         System.err.println("Impossibile connettersi al server: " + ex.getMessage());
                 }
         }
+}

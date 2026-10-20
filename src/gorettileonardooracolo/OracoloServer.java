@@ -10,6 +10,8 @@ import java.io.PrintWriter;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 public class OracoloServer {
 	// Frasi che l'Oracolo usa per predire il futuro.
@@ -55,6 +57,8 @@ public class OracoloServer {
 	private static class GestoreClient implements Runnable {
 		private final Socket client;
 		private final Random casuale = new Random();
+		// La cronologia è dentro il gestore: ogni client ha la propria.
+		private final List<String> domande = new ArrayList<>();
 		private String persona = "Oracolo";
 
 		GestoreClient(Socket client) {
@@ -75,7 +79,22 @@ public class OracoloServer {
 					linea = linea.trim();
 
 					if (linea.equalsIgnoreCase("HELP")) {
-						out.println("Comandi: PERSONA_Oracolo, PERSONA_Chiromante, PERSONA_Mago, DOMANDA_<testo>, HELP");
+						out.println("Comandi: PERSONALITA, PERSONA_<nome>, DOMANDA_<testo>, STORIA, HELP");
+						out.println("Personalità disponibili: Oracolo, Chiromante, Mago.");
+						continue;
+					}
+
+					if (linea.equalsIgnoreCase("PERSONALITA")) {
+						out.println("Personalità disponibili: Oracolo, Chiromante, Mago. Scelta attuale: " + persona + ".");
+						continue;
+					}
+
+					if (linea.equalsIgnoreCase("STORIA")) {
+						if (domande.isEmpty()) {
+							out.println("Non hai ancora fatto domande in questa sessione.");
+						} else {
+							out.println("Ultime domande: " + String.join(" | ", domande));
+						}
 						continue;
 					}
 
@@ -100,7 +119,20 @@ public class OracoloServer {
 						continue;
 					}
 
-					if (linea.regionMatches(true, 0, "DOMANDA_", 0, "DOMANDA_".length())) {						String risposta = scegliRisposta();
+					if (linea.regionMatches(true, 0, "DOMANDA_", 0, "DOMANDA_".length())) {
+						String domanda = linea.substring("DOMANDA_".length()).trim();
+						if (domanda.isEmpty()) {
+							out.println("Scrivi la domanda dopo DOMANDA_.");
+							continue;
+						}
+
+						// Conserva solo le cinque domande più recenti.
+						domande.add(domanda);
+						if (domande.size() > 5) {
+							domande.remove(0);
+						}
+
+						String risposta = scegliRisposta();
 						out.println(persona + ": " + risposta);
 						continue;
 					}
