@@ -12,15 +12,24 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
+/**
+ * Questo è il server: accetta i client e risponde alle loro richieste.
+ */
 public class OracoloServer {
+    // Queste parole mi servono per capire che comando è arrivato.
     private static final String COMANDO_STORIA = "STORIA";
     private static final String COMANDO_ESCI = "ESCI";
     private static final String PREFISSO_PERSONA = "PERSONA_";
     private static final String PREFISSO_DOMANDA = "DOMANDA_";
+
+    // Qui tengo tutti i client collegati, anche se ognuno è gestito da un thread diverso.
     private static final List<Socket> CLIENT_CONNESSI =
             Collections.synchronizedList(new ArrayList<>());
+
+    // volatile fa vedere a tutti i thread quando è stato chiesto di chiudere il server.
     private static volatile boolean chiusuraRichiesta;
 
+    // Queste sono le frasi che può dire ogni personalità.
     private static final String[] FRASI_ORACOLO = {
         "Vedo un cambiamento importante nel tuo futuro.",
         "Una nuova opportunità si presenterà presto.",
@@ -39,6 +48,9 @@ public class OracoloServer {
         "Dal fumo appare un indizio: riprova domani."
     };
 
+    /**
+     * Avvio il server e affido ogni nuova connessione a un thread separato.
+     */
     public static void main(String[] args) {
         chiusuraRichiesta = false;
 
@@ -63,6 +75,9 @@ public class OracoloServer {
         System.out.println("OracoloServer terminato.");
     }
 
+    /**
+     * Qui gestisco le richieste di un client alla volta.
+     */
     private static class GestoreClient implements Runnable {
         private final Socket client;
         private final ServerSocket server;
@@ -75,8 +90,12 @@ public class OracoloServer {
             this.server = server;
         }
 
+        /**
+         * Leggo i comandi finché il client resta collegato, poi chiudo la connessione.
+         */
         @Override
         public void run() {
+            // Alla fine Java chiude da solo socket e flussi aperti qui.
             try (
                 Socket socket = client;
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -85,6 +104,7 @@ public class OracoloServer {
                 String linea;
                 while ((linea = in.readLine()) != null) {
                     linea = linea.trim();
+                    // Lo rendo tutto maiuscolo così accetto il comando anche se scritto in modo diverso.
                     String comandoMaiuscolo = linea.toUpperCase(Locale.ROOT);
 
                     if (COMANDO_ESCI.equals(comandoMaiuscolo)) {
@@ -110,6 +130,9 @@ public class OracoloServer {
             }
         }
 
+        /**
+         * Mando al client le domande che ha fatto in questa sessione.
+         */
         private void mostraCronologia(PrintWriter out) {
             if (domande.isEmpty()) {
                 out.println("Non hai ancora fatto domande in questa sessione.");
@@ -118,6 +141,9 @@ public class OracoloServer {
             }
         }
 
+        /**
+         * Controllo la personalità scelta e la salvo per questo client.
+         */
         private void cambiaPersona(String scelta, PrintWriter out) {
             scelta = scelta.trim();
 
@@ -135,6 +161,9 @@ public class OracoloServer {
             out.println("Hai scelto la personalità " + persona + ".");
         }
 
+        /**
+         * Salvo la domanda e rispondo con una frase a caso della personalità attiva.
+         */
         private void rispondi(String domanda, PrintWriter out) {
             domanda = domanda.trim();
             if (domanda.isEmpty()) {
@@ -150,6 +179,9 @@ public class OracoloServer {
             out.println(persona + ": " + scegliRisposta());
         }
 
+        /**
+         * Quando esco, smetto di accettare client e chiudo quelli ancora collegati.
+         */
         private void chiudiServer() {
             chiusuraRichiesta = true;
             try {
@@ -158,6 +190,7 @@ public class OracoloServer {
                 System.err.println("Errore durante la chiusura del server: " + e.getMessage());
             }
 
+            // Blocco la lista mentre la scorro, così gli altri thread non la modificano insieme a me.
             synchronized (CLIENT_CONNESSI) {
                 for (Socket socket : CLIENT_CONNESSI) {
                     try {
@@ -169,6 +202,9 @@ public class OracoloServer {
             }
         }
 
+        /**
+         * Pesco una frase a caso tra quelle della personalità attiva.
+         */
         private String scegliRisposta() {
             String[] frasi = FRASI_ORACOLO;
 

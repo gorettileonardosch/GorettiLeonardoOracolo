@@ -17,7 +17,7 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
     private transient ControlloreOracolo controllore;
 
     /**
-     * Creates new form InterfacciaGrafica
+     * Preparo la finestra, mostro l'Oracolo e collego i pulsanti al controllore.
      */
     public InterfacciaGrafica() {
         initComponents();
@@ -27,6 +27,9 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
         inizializzaEventi();
     }
 
+    /**
+     * Faccio vedere nella label in fondo la GIF della personalità scelta.
+     */
     private void aggiornaImmaginePersonalita(String personalita) {
         String fileGif;
         switch (personalita) {
@@ -43,6 +46,7 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
 
         java.net.URL risorsa = getClass().getResource(fileGif);
         if (risorsa == null) {
+            // Se non trovo la GIF, lo scrivo nella finestra invece di lasciare lo spazio vuoto.
             logger.severe("GIF non trovata nel classpath: " + fileGif);
             LBLImmagineMistico.setIcon(null);
             LBLImmagineMistico.setText("Immagine non disponibile");
@@ -53,8 +57,12 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
         LBLImmagineMistico.setIcon(new javax.swing.ImageIcon(risorsa));
     }
 
+    /**
+     * Collego la lista, il tasto Invio e il pulsante alle azioni giuste.
+     */
     private void inizializzaEventi() {
         LSTPersonalita.addListSelectionListener(event -> {
+            // Aspetto che la selezione sia finita, altrimenti questo evento può arrivare più volte.
             if (event.getValueIsAdjusting()) {
                 return;
             }
@@ -72,15 +80,24 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
         BTNInviaDomanda.addActionListener(event -> inviaTesto());
     }
 
+    /**
+     * Mando al controllore quello che ho scritto e poi svuoto il campo.
+     */
     private void inviaTesto() {
         controllore.inviaTesto(TXTDomanda.getText());
         TXTDomanda.setText("");
     }
 
+    /**
+     * Aggiungo il messaggio alla chat usando il thread di Swing.
+     */
     private void appendChat(String messaggio) {
         SwingUtilities.invokeLater(() -> aggiungiChat(messaggio));
     }
 
+    /**
+     * Scrivo il messaggio nella chat e scorro in fondo per vedere l'ultimo.
+     */
     private void aggiungiChat(String messaggio) {
         if (messaggio == null || messaggio.trim().isEmpty()) {
             return;
