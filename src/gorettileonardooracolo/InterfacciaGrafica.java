@@ -26,8 +26,36 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
      */
     public InterfacciaGrafica() {
         initComponents();
+        aggiornaImmaginePersonalita(personalitaSelezionata);
+        LSTPersonalita.setSelectedValue(personalitaSelezionata, true);
         inizializzaConnessione();
         inizializzaEventi();
+    }
+
+    private void aggiornaImmaginePersonalita(String personalita) {
+        String fileGif;
+        switch (personalita) {
+            case "Chiromante":
+                fileGif = "/cartomante.gif";
+                break;
+            case "Mago":
+                fileGif = "/mago.gif";
+                break;
+            default:
+                fileGif = "/oracolo.gif";
+                break;
+        }
+
+        java.net.URL risorsa = getClass().getResource(fileGif);
+        if (risorsa == null) {
+            logger.severe("GIF non trovata nel classpath: " + fileGif);
+            LBLImmagineMistico.setIcon(null);
+            LBLImmagineMistico.setText("Immagine non disponibile");
+            return;
+        }
+
+        LBLImmagineMistico.setText(null);
+        LBLImmagineMistico.setIcon(new javax.swing.ImageIcon(risorsa));
     }
 
     private void inizializzaConnessione() {
@@ -41,6 +69,7 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
                 String scelta = LSTPersonalita.getSelectedValue();
                 if (scelta != null && !scelta.equalsIgnoreCase(personalitaSelezionata)) {
                     personalitaSelezionata = scelta;
+                    aggiornaImmaginePersonalita(scelta);
                     inviaComando("PERSONA_" + scelta);
                     statoInput = STATO_MENU;
                 }
@@ -53,7 +82,7 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
 
     private void mostraMenu() {
         appendChat("1. Fai una domanda");
-        appendChat("3. Vedi le ultime domande");
+        appendChat("2. Vedi le ultime domande");
         appendChat("0. Esci");
         appendChat("Scelta: ");
         statoInput = STATO_MENU;
@@ -87,7 +116,7 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
             return;
         }
 
-        if ("3".equals(scelta)) {
+        if ("2".equals(scelta)) {
             appendChat("Recupero ultime domande...");
             inviaComando("STORIA");
             statoInput = STATO_MENU;
@@ -95,8 +124,10 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
         }
 
         if ("0".equals(scelta)) {
-            appendChat("Uscita dal client.");
+            appendChat("Chiusura del client e del server...");
+            inviaComando("ESCI");
             chiudiConnessione();
+            dispose();
             return;
         }
 
@@ -205,7 +236,7 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
                         .addComponent(LBLSceltaPersonalita, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(244, 244, 244)
                         .addComponent(LBLCronologiaChat))
-                    .addComponent(LBLImmagineMistico, javax.swing.GroupLayout.PREFERRED_SIZE, 339, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(LBLImmagineMistico, javax.swing.GroupLayout.PREFERRED_SIZE, 576, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 240, Short.MAX_VALUE)
                 .addContainerGap())
@@ -228,7 +259,7 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
                             .addComponent(TXTDomanda, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(BTNInviaDomanda))
                         .addGap(18, 18, 18)
-                        .addComponent(LBLImmagineMistico, javax.swing.GroupLayout.PREFERRED_SIZE, 149, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(LBLImmagineMistico, javax.swing.GroupLayout.PREFERRED_SIZE, 514, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 16, Short.MAX_VALUE))
                     .addComponent(jScrollPane2))
                 .addContainerGap())

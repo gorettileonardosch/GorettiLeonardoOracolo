@@ -39,7 +39,7 @@
                       <EmptySpace min="-2" pref="244" max="-2" attributes="0"/>
                       <Component id="LBLCronologiaChat" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <Component id="LBLImmagineMistico" min="-2" pref="339" max="-2" attributes="0"/>
+                  <Component id="LBLImmagineMistico" min="-2" pref="576" max="-2" attributes="0"/>
               </Group>
               <EmptySpace type="separate" max="-2" attributes="0"/>
               <Component id="jScrollPane2" pref="240" max="32767" attributes="0"/>
@@ -67,7 +67,7 @@
                           <Component id="BTNInviaDomanda" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace type="separate" max="-2" attributes="0"/>
-                      <Component id="LBLImmagineMistico" min="-2" pref="149" max="-2" attributes="0"/>
+                      <Component id="LBLImmagineMistico" min="-2" pref="514" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="16" max="32767" attributes="0"/>
                   </Group>
                   <Component id="jScrollPane2" max="32767" attributes="0"/>

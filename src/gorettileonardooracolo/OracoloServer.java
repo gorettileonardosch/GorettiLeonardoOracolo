@@ -13,11 +13,16 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class OracoloServer {
     private static final String COMANDO_STORIA = "STORIA";
+    private static final String COMANDO_ESCI = "ESCI";
     private static final String PREFISSO_PERSONA = "PERSONA_";
     private static final String PREFISSO_DOMANDA = "DOMANDA_";
+    private static final Set<Socket> CLIENT_CONNESSI = ConcurrentHashMap.newKeySet();
+    private static volatile boolean chiusuraRichiesta;
 
     // Frasi che l'Oracolo usa per predire il futuro.
     private static final String[] FRASI_ORACOLO = {
@@ -42,30 +47,38 @@ public class OracoloServer {
 
     // Avvia il server e crea un thread separato per ogni client.
     public static void main(String[] args) {
+        chiusuraRichiesta = false;
         try (ServerSocket server = new ServerSocket(GorettiLeonardoOracolo.PORTA)) {
             System.out.println("OracoloServer in ascolto sulla porta " + GorettiLeonardoOracolo.PORTA);
 
             while (true) {
                 Socket client = server.accept();
+                CLIENT_CONNESSI.add(client);
                 System.out.println("Nuovo client: " + client.getRemoteSocketAddress());
 
-                Thread thread = new Thread(new GestoreClient(client));
+                Thread thread = new Thread(new GestoreClient(client, server));
                 thread.start();
             }
         } catch (IOException e) {
-            System.err.println("Impossibile avviare il server: " + e.getMessage());
+            if (!chiusuraRichiesta) {
+                System.err.println("Impossibile avviare o mantenere attivo il server: " + e.getMessage());
+            }
+        } finally {
+            System.out.println("OracoloServer terminato.");
         }
     }
 
     // Gestisce i comandi di un solo client.
     private static class GestoreClient implements Runnable {
         private final Socket client;
+        private final ServerSocket server;
         private final Random casuale = new Random();
         private final List<String> domande = new ArrayList<>();
         private String persona = "Oracolo";
 
-        GestoreClient(Socket client) {
+        GestoreClient(Socket client, ServerSocket server) {
             this.client = client;
+            this.server = server;
         }
 
         @Override
@@ -78,6 +91,12 @@ public class OracoloServer {
                 String linea;
                 while ((linea = in.readLine()) != null) {
                     linea = linea.trim();
+
+                    if (COMANDO_ESCI.equalsIgnoreCase(linea)) {
+                        out.println("Server in chiusura.");
+                        arrestaServer();
+                        break;
+                    }
 
                     if (COMANDO_STORIA.equalsIgnoreCase(linea)) {
                         if (domande.isEmpty()) {
@@ -124,6 +143,25 @@ public class OracoloServer {
                 }
             } catch (IOException e) {
                 System.out.println("Connessione client terminata.");
+            } finally {
+                CLIENT_CONNESSI.remove(client);
+            }
+        }
+
+        private void arrestaServer() {
+            chiusuraRichiesta = true;
+            try {
+                server.close();
+            } catch (IOException e) {
+                System.err.println("Errore durante la chiusura del server: " + e.getMessage());
+            }
+
+            for (Socket socket : CLIENT_CONNESSI) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    System.err.println("Errore durante la chiusura di un client: " + e.getMessage());
+                }
             }
         }
 
