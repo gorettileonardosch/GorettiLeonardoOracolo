@@ -13,22 +13,17 @@ import javax.swing.SwingUtilities;
 public class InterfacciaGrafica extends javax.swing.JFrame {
     private static final long serialVersionUID = 1L;
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(InterfacciaGrafica.class.getName());
-    private static final String STATO_MENU = "MENU";
-    private static final String STATO_DOMANDA = "DOMANDA";
 
-    private transient OracoloClient client;
-    private String personalitaSelezionata = "Oracolo";
-    private String statoInput = STATO_MENU;
-    private boolean inAttesaRisposta;
+    private transient ControlloreOracolo controllore;
 
     /**
      * Creates new form InterfacciaGrafica
      */
     public InterfacciaGrafica() {
         initComponents();
-        aggiornaImmaginePersonalita(personalitaSelezionata);
-        LSTPersonalita.setSelectedValue(personalitaSelezionata, true);
-        inizializzaConnessione();
+        aggiornaImmaginePersonalita("Oracolo");
+        LSTPersonalita.setSelectedValue("Oracolo", true);
+        controllore = new ControlloreOracolo(this::appendChat, this::dispose);
         inizializzaEventi();
     }
 
@@ -58,114 +53,32 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
         LBLImmagineMistico.setIcon(new javax.swing.ImageIcon(risorsa));
     }
 
-    private void inizializzaConnessione() {
-        client = new OracoloClient(this::riceviMessaggioServer);
-        mostraMenu();
-    }
-
     private void inizializzaEventi() {
         LSTPersonalita.addListSelectionListener(event -> {
-            if (!event.getValueIsAdjusting()) {
-                String scelta = LSTPersonalita.getSelectedValue();
-                if (scelta != null && !scelta.equalsIgnoreCase(personalitaSelezionata)) {
-                    personalitaSelezionata = scelta;
-                    aggiornaImmaginePersonalita(scelta);
-                    inviaComando("PERSONA_" + scelta);
-                    statoInput = STATO_MENU;
-                }
+            if (event.getValueIsAdjusting()) {
+                return;
             }
+
+            String scelta = LSTPersonalita.getSelectedValue();
+            if (scelta == null) {
+                return;
+            }
+
+            aggiornaImmaginePersonalita(scelta);
+            controllore.selezionaPersonalita(scelta);
         });
 
         TXTDomanda.addActionListener(event -> inviaTesto());
         BTNInviaDomanda.addActionListener(event -> inviaTesto());
     }
 
-    private void mostraMenu() {
-        appendChat("1. Fai una domanda");
-        appendChat("2. Vedi le ultime domande");
-        appendChat("0. Esci");
-        appendChat("Scelta: ");
-        statoInput = STATO_MENU;
-    }
-
     private void inviaTesto() {
-        String testo = TXTDomanda.getText() == null ? "" : TXTDomanda.getText().trim();
-        if (testo.isEmpty()) {
-            return;
-        }
-
-        if (STATO_MENU.equals(statoInput)) {
-            gestisciSceltaMenu(testo);
-            TXTDomanda.setText("");
-            return;
-        }
-
-        if (STATO_DOMANDA.equals(statoInput)) {
-            inviaComando("DOMANDA_" + testo);
-            appendChat("Tu: " + testo);
-            TXTDomanda.setText("");
-            statoInput = STATO_MENU;
-            return;
-        }
-    }
-
-    private void gestisciSceltaMenu(String scelta) {
-        if ("1".equals(scelta)) {
-            appendChat("Scrivi la tua domanda:");
-            statoInput = STATO_DOMANDA;
-            return;
-        }
-
-        if ("2".equals(scelta)) {
-            appendChat("Recupero ultime domande...");
-            inviaComando("STORIA");
-            statoInput = STATO_MENU;
-            return;
-        }
-
-        if ("0".equals(scelta)) {
-            appendChat("Chiusura del client e del server...");
-            inviaComando("ESCI");
-            chiudiConnessione();
-            dispose();
-            return;
-        }
-
-        appendChat("Scelta non valida. Scegli uno dei numeri del menu.");
-        mostraMenu();
-    }
-
-    private void inviaComando(String comando) {
-        if (client != null) {
-            inAttesaRisposta = client.inviaComando(comando);
-        }
-    }
-
-    private void chiudiConnessione() {
-        if (client != null) {
-            client.chiudiConnessione();
-        }
-        statoInput = STATO_MENU;
+        controllore.inviaTesto(TXTDomanda.getText());
+        TXTDomanda.setText("");
     }
 
     private void appendChat(String messaggio) {
-        if (messaggio == null || messaggio.trim().isEmpty()) {
-            return;
-        }
-
-        SwingUtilities.invokeLater(() -> {
-            aggiungiChat(messaggio);
-        });
-    }
-
-    private void riceviMessaggioServer(String messaggio) {
-        SwingUtilities.invokeLater(() -> {
-            aggiungiChat(messaggio);
-            if (inAttesaRisposta) {
-                inAttesaRisposta = false;
-                mostraMenu();
-            }
-        });
+        SwingUtilities.invokeLater(() -> aggiungiChat(messaggio));
     }
 
     private void aggiungiChat(String messaggio) {

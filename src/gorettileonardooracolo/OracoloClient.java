@@ -18,26 +18,21 @@ public class OracoloClient {
     }
 
     private void connetti() {
-        Socket nuovaConnessione = null;
         try {
-            nuovaConnessione = new Socket("localhost", GorettiLeonardoOracolo.PORTA);
-            PrintWriter writer = new PrintWriter(nuovaConnessione.getOutputStream(), true);
-            BufferedReader dalSocket = new BufferedReader(
-                    new InputStreamReader(nuovaConnessione.getInputStream()));
+            socket = new Socket("localhost", GorettiLeonardoOracolo.PORTA);
+            versoSocket = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader dalSocket = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            socket = nuovaConnessione;
-            versoSocket = writer;
-            Thread ascolto = new Thread(() -> ascoltaServer(dalSocket));
+            Thread ascolto = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    ascoltaServer(dalSocket);
+                }
+            });
             ascolto.setDaemon(true);
             ascolto.start();
         } catch (IOException ex) {
-            if (nuovaConnessione != null) {
-                try {
-                    nuovaConnessione.close();
-                } catch (IOException closeException) {
-                    ex.addSuppressed(closeException);
-                }
-            }
+            chiudiSocketDopoErrore();
             mostraMessaggio.accept("Impossibile collegarsi al server: " + ex.getMessage());
         }
     }
@@ -73,11 +68,20 @@ public class OracoloClient {
     }
 
     public void chiudiConnessione() {
-        if (socket == null || socket.isClosed()) {
-            return;
-        }
         try {
-            socket.close();
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+        } catch (IOException ex) {
+            mostraMessaggio.accept("Errore durante la chiusura della connessione: " + ex.getMessage());
+        }
+    }
+
+    private void chiudiSocketDopoErrore() {
+        try {
+            if (socket != null) {
+                socket.close();
+            }
         } catch (IOException ex) {
             mostraMessaggio.accept("Errore durante la chiusura della connessione: " + ex.getMessage());
         }
