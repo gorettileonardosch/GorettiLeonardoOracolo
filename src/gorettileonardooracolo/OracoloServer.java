@@ -5,156 +5,146 @@
 package gorettileonardooracolo;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
 public class OracoloServer {
-	// Frasi che l'Oracolo usa per predire il futuro.
-	private static final String[] FRASI_ORACOLO = {
-		"Vedo un cambiamento importante nel tuo futuro.",
-		"Una nuova opportunità si presenterà presto.",
-		"Il tuo cammino sarà chiaro se saprai avere pazienza."
-	};
+    private static final String COMANDO_STORIA = "STORIA";
+    private static final String PREFISSO_PERSONA = "PERSONA_";
+    private static final String PREFISSO_DOMANDA = "DOMANDA_";
 
-	// Frasi che la Chiromante usa quando legge i tarocchi.
-	private static final String[] FRASI_CHIROMANTE = {
-		"Le carte mostrano il Sole: ti aspettano giorni luminosi.",
-		"La Ruota della Fortuna annuncia un cambiamento.",
-		"L'Eremita ti consiglia di ascoltare te stesso."
-	};
+    // Frasi che l'Oracolo usa per predire il futuro.
+    private static final String[] FRASI_ORACOLO = {
+        "Vedo un cambiamento importante nel tuo futuro.",
+        "Una nuova opportunità si presenterà presto.",
+        "Il tuo cammino sarà chiaro se saprai avere pazienza."
+    };
 
-	// Frasi teatrali che il Mago accompagna con un piccolo effetto magico.
-	private static final String[] FRASI_MAGO = {
-		"Puff! Una scintilla magica annuncia un futuro luminoso.",
-		"Le rune girano nell'aria: la risposta è forse!",
-		"Dal fumo appare un indizio: riprova domani."
-	};
+    // Frasi che la Chiromante usa quando legge i tarocchi.
+    private static final String[] FRASI_CHIROMANTE = {
+        "Le carte mostrano il Sole: ti aspettano giorni luminosi.",
+        "La Ruota della Fortuna annuncia un cambiamento.",
+        "L'Eremita ti consiglia di ascoltare te stesso."
+    };
 
-	// Avvia il server e crea un thread separato per ogni client.
-	public static void main(String[] args) {
-		try (ServerSocket server = new ServerSocket(GorettiLeonardoOracolo.PORTA)) {
-			System.out.println("OracoloServer in ascolto sulla porta " + GorettiLeonardoOracolo.PORTA);
+    // Frasi teatrali che il Mago accompagna con un piccolo effetto magico.
+    private static final String[] FRASI_MAGO = {
+        "Puff! Una scintilla magica annuncia un futuro luminoso.",
+        "Le rune girano nell'aria: la risposta è forse!",
+        "Dal fumo appare un indizio: riprova domani."
+    };
 
-			while (true) {
-				Socket client = server.accept();
-				System.out.println("Nuovo client: " + client.getRemoteSocketAddress());
+    // Avvia il server e crea un thread separato per ogni client.
+    public static void main(String[] args) {
+        try (ServerSocket server = new ServerSocket(GorettiLeonardoOracolo.PORTA)) {
+            System.out.println("OracoloServer in ascolto sulla porta " + GorettiLeonardoOracolo.PORTA);
 
-				// Ogni client ha il proprio thread e la propria personalità.
-				Thread thread = new Thread(new GestoreClient(client));
-				thread.start();
-			}
-		} catch (IOException e) {
-			System.err.println("Impossibile avviare il server: " + e.getMessage());
-		}
-	}
+            while (true) {
+                Socket client = server.accept();
+                System.out.println("Nuovo client: " + client.getRemoteSocketAddress());
 
-	// Gestisce i comandi di un solo client.
-	private static class GestoreClient implements Runnable {
-		private final Socket client;
-		private final Random casuale = new Random();
-		// La cronologia è dentro il gestore: ogni client ha la propria.
-		private final List<String> domande = new ArrayList<>();
-		private String persona = "Oracolo";
+                Thread thread = new Thread(new GestoreClient(client));
+                thread.start();
+            }
+        } catch (IOException e) {
+            System.err.println("Impossibile avviare il server: " + e.getMessage());
+        }
+    }
 
-		GestoreClient(Socket client) {
-			this.client = client;
-		}
+    // Gestisce i comandi di un solo client.
+    private static class GestoreClient implements Runnable {
+        private final Socket client;
+        private final Random casuale = new Random();
+        private final List<String> domande = new ArrayList<>();
+        private String persona = "Oracolo";
 
-		@Override
-		public void run() {
-			try (
-				Socket socket = client;
-				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-				PrintWriter out = new PrintWriter(socket.getOutputStream(), true)
-			) {
-				out.println("Benvenuto! Digita HELP per vedere i comandi.");
+        GestoreClient(Socket client) {
+            this.client = client;
+        }
 
-				String linea;
-				while ((linea = in.readLine()) != null) {
-					linea = linea.trim();
+        @Override
+        public void run() {
+            try (
+                Socket socket = client;
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true)
+            ) {
+                String linea;
+                while ((linea = in.readLine()) != null) {
+                    linea = linea.trim();
 
-					if (linea.equalsIgnoreCase("HELP")) {
-						out.println("Comandi: PERSONALITA, PERSONA_<nome>, DOMANDA_<testo>, STORIA, HELP");
-						out.println("Personalità disponibili: Oracolo, Chiromante, Mago.");
-						continue;
-					}
+                    if (COMANDO_STORIA.equalsIgnoreCase(linea)) {
+                        if (domande.isEmpty()) {
+                            out.println("Non hai ancora fatto domande in questa sessione.");
+                        } else {
+                            out.println("Ultime domande: " + String.join(" | ", domande));
+                        }
+                        continue;
+                    }
 
-					if (linea.equalsIgnoreCase("PERSONALITA")) {
-						out.println("Personalità disponibili: Oracolo, Chiromante, Mago. Scelta attuale: " + persona + ".");
-						continue;
-					}
+                    if (haPrefisso(linea, PREFISSO_PERSONA)) {
+                        String scelta = linea.substring(PREFISSO_PERSONA.length()).trim();
+                        if ("Oracolo".equalsIgnoreCase(scelta)) {
+                            persona = "Oracolo";
+                        } else if ("Chiromante".equalsIgnoreCase(scelta)) {
+                            persona = "Chiromante";
+                        } else if ("Mago".equalsIgnoreCase(scelta)) {
+                            persona = "Mago";
+                        } else {
+                            out.println("Personalità non valida. Scegli Oracolo, Chiromante o Mago.");
+                            continue;
+                        }
+                        out.println("Hai scelto la personalità " + persona + ".");
+                        continue;
+                    }
 
-					if (linea.equalsIgnoreCase("STORIA")) {
-						if (domande.isEmpty()) {
-							out.println("Non hai ancora fatto domande in questa sessione.");
-						} else {
-							out.println("Ultime domande: " + String.join(" | ", domande));
-						}
-						continue;
-					}
+                    if (haPrefisso(linea, PREFISSO_DOMANDA)) {
+                        String domanda = linea.substring(PREFISSO_DOMANDA.length()).trim();
+                        if (domanda.isEmpty()) {
+                            out.println("Scrivi la domanda dopo DOMANDA_.");
+                            continue;
+                        }
 
-					if (linea.equalsIgnoreCase(GorettiLeonardoOracolo.EXIT_PHRASE)) {
-						out.println("Addio! Alla prossima.");
-						break;
-					}
+                        domande.add(domanda);
+                        if (domande.size() > 5) {
+                            domande.remove(0);
+                        }
 
-					if (linea.regionMatches(true, 0, "PERSONA_", 0, "PERSONA_".length())) {
-						String scelta = linea.substring("PERSONA_".length()).trim();
-						if (scelta.equalsIgnoreCase("Oracolo")) {
-							persona = "Oracolo";
-						} else if (scelta.equalsIgnoreCase("Chiromante")) {
-							persona = "Chiromante";
-						} else if (scelta.equalsIgnoreCase("Mago")) {
-							persona = "Mago";
-						} else {
-							out.println("Personalità non valida. Scegli Oracolo, Chiromante o Mago.");
-							continue;
-						}
-						out.println("Hai scelto la personalità " + persona + ".");
-						continue;
-					}
+                        out.println(persona + ": " + scegliRisposta());
+                        continue;
+                    }
 
-					if (linea.regionMatches(true, 0, "DOMANDA_", 0, "DOMANDA_".length())) {
-						String domanda = linea.substring("DOMANDA_".length()).trim();
-						if (domanda.isEmpty()) {
-							out.println("Scrivi la domanda dopo DOMANDA_.");
-							continue;
-						}
+                    out.println("Comando non riconosciuto.");
+                }
+            } catch (IOException e) {
+                System.out.println("Connessione client terminata.");
+            }
+        }
 
-						// Conserva solo le cinque domande più recenti.
-						domande.add(domanda);
-						if (domande.size() > 5) {
-							domande.remove(0);
-						}
+        private boolean haPrefisso(String linea, String prefisso) {
+            return linea.regionMatches(true, 0, prefisso, 0, prefisso.length());
+        }
 
-						String risposta = scegliRisposta();
-						out.println(persona + ": " + risposta);
-						continue;
-					}
-
-					out.println("Comando non riconosciuto. Digita HELP per assistenza.");
-				}
-			} catch (IOException e) {
-				System.out.println("Connessione client terminata.");
-			}
-		}
-
-		// Sceglie una frase dalla lista della personalità selezionata.
-		private String scegliRisposta() {
-			String[] frasi = FRASI_ORACOLO;
-
-			if (persona.equals("Chiromante")) {
-				frasi = FRASI_CHIROMANTE;
-			} else if (persona.equals("Mago")) {
-				frasi = FRASI_MAGO;
-			}
-
-			return frasi[casuale.nextInt(frasi.length)];
-		}
-	}
+        private String scegliRisposta() {
+            String[] frasi;
+            switch (persona) {
+                case "Chiromante":
+                    frasi = FRASI_CHIROMANTE;
+                    break;
+                case "Mago":
+                    frasi = FRASI_MAGO;
+                    break;
+                default:
+                    frasi = FRASI_ORACOLO;
+                    break;
+            }
+            return frasi[casuale.nextInt(frasi.length)];
+        }
+    }
 }
