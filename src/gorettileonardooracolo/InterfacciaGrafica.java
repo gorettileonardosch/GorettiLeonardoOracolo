@@ -28,6 +28,8 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTextArea1 = new javax.swing.JTextArea();
         jScrollPane1 = new javax.swing.JScrollPane();
         LSTPersonalita = new javax.swing.JList<>();
         LBLSceltaPersonalita = new javax.swing.JLabel();
@@ -37,6 +39,11 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         TXTCronologia = new javax.swing.JTextArea();
         BTNInviaDomanda = new javax.swing.JToggleButton();
+        LBLImmagineMistico = new javax.swing.JLabel();
+
+        jTextArea1.setColumns(20);
+        jTextArea1.setRows(5);
+        jScrollPane3.setViewportView(jTextArea1);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -77,7 +84,8 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(LBLSceltaPersonalita, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(244, 244, 244)
-                        .addComponent(LBLCronologiaChat)))
+                        .addComponent(LBLCronologiaChat))
+                    .addComponent(LBLImmagineMistico, javax.swing.GroupLayout.PREFERRED_SIZE, 339, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 240, Short.MAX_VALUE)
                 .addContainerGap())
@@ -99,7 +107,9 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(TXTDomanda, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(BTNInviaDomanda))
-                        .addGap(0, 183, Short.MAX_VALUE))
+                        .addGap(18, 18, 18)
+                        .addComponent(LBLImmagineMistico, javax.swing.GroupLayout.PREFERRED_SIZE, 149, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 16, Short.MAX_VALUE))
                     .addComponent(jScrollPane2))
                 .addContainerGap())
         );
@@ -135,6 +145,7 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JToggleButton BTNInviaDomanda;
     private javax.swing.JLabel LBLCronologiaChat;
+    private javax.swing.JLabel LBLImmagineMistico;
     private javax.swing.JLabel LBLInserisciDomanda;
     private javax.swing.JLabel LBLSceltaPersonalita;
     private javax.swing.JList<String> LSTPersonalita;
@@ -142,5 +153,7 @@ public class InterfacciaGrafica extends javax.swing.JFrame {
     private javax.swing.JTextField TXTDomanda;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JTextArea jTextArea1;
     // End of variables declaration//GEN-END:variables
 }
